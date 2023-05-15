@@ -79,6 +79,24 @@
     <Content Remove="..\BarotraumaShared\**\*.props" />
     <Compile Include="..\BarotraumaShared\**\*.cs" />
     <Compile Remove="..\BarotraumaShared\Content\**\*.cs" />
+    <Compile Update="..\BarotraumaShared\SharedSource\Items\Components\Holdable\Blueprint.cs">
+      <Link>SharedSource\Items\Components\Holdable\Blueprint.cs</Link>
+    </Compile>
+    <Compile Update="..\BarotraumaShared\SharedSource\Map\ResourcePrefab.cs">
+      <Link>SharedSource\Map\ResourcePrefab.cs</Link>
+    </Compile>
+    <Compile Update="..\BarotraumaShared\SharedSource\ContentManagement\ContentFile\ResourceFile.cs">
+      <Link>SharedSource\ContentManagement\ContentFile\ResourceFile.cs</Link>
+    </Compile>
+    <Compile Update="..\BarotraumaShared\SharedSource\ContentManagement\ContentFile\ResourceFile.cs">
+      <Link>SharedSource\ContentManagement\ContentFile\ResourceFile.cs</Link>
+    </Compile>
+    <Compile Update="..\BarotraumaShared\SharedSource\ContentManagement\XMLload.cs">
+      <Link>SharedSource\ContentManagement\XMLload.cs</Link>
+    </Compile>
+    <Compile Update="..\BarotraumaShared\SharedSource\ContentManagement\ContentFile\ResourceFile.cs">
+      <Link>SharedSource\ContentManagement\ContentFile\ResourceFile.cs</Link>
+    </Compile>
   </ItemGroup>
   
   <ItemGroup>

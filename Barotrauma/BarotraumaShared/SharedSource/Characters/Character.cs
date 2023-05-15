@@ -41,6 +41,7 @@ namespace Barotrauma
         partial void UpdateLimbLightSource(Limb limb);
 
         private bool enabled = true;
+        
         public bool Enabled
         {
             get

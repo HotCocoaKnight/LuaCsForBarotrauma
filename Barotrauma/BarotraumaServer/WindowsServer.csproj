@@ -74,6 +74,9 @@
     <Compile Include="..\BarotraumaShared\**\*.cs" />
     <Compile Remove="..\BarotraumaShared\Content\**\*.cs" />
     <Content Remove="DedicatedServer.exe" />
+    <Compile Update="..\BarotraumaShared\SharedSource\Map\Resource.cs">
+      <Link>SharedSource\Map\Resource.cs</Link>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup Condition="'$(Configuration)'!='Debug'">

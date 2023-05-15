@@ -473,6 +473,7 @@ namespace Barotrauma
             {
                 DebugConsole.ThrowError(error.ToString());
             }
+            Baro30Loader.LoadBT30();
         }
 
         public static IEnumerable<LoadProgress> Init()

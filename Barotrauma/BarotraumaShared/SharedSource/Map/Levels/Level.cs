@@ -1382,6 +1382,12 @@ namespace Barotrauma
                     edge.Site2 = null;
                 }
             }
+            
+            #if CLIENT
+            
+            ResourceGeneration.Generate(this);
+            
+            #endif
 
             //initialize MapEntities that aren't in any sub (e.g. items inside ruins)
             MapEntity.MapLoaded(MapEntity.mapEntityList.FindAll(me => me.Submarine == null), false);
@@ -1411,6 +1417,7 @@ namespace Barotrauma
 
             //assign an ID to make entity events work
             //ID = FindFreeID();
+
             Generating = false;
         }
 

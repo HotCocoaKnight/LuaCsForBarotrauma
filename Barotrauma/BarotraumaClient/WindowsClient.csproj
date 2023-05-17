@@ -97,6 +97,30 @@
     <Compile Update="..\BarotraumaShared\SharedSource\ContentManagement\ContentFile\ResourceFile.cs">
       <Link>SharedSource\ContentManagement\ContentFile\ResourceFile.cs</Link>
     </Compile>
+    <Compile Update="..\BarotraumaShared\SharedSource\Map\Levels\ResourceGeneration.cs">
+      <Link>SharedSource\Map\Levels\ResourceGeneration.cs</Link>
+    </Compile>
+    <Compile Update="..\BarotraumaShared\SharedSource\ContentManagement\ContentPackage\Baro30Package.cs">
+      <Link>SharedSource\ContentManagement\ContentPackage\Baro30Package.cs</Link>
+    </Compile>
+    <Compile Update="..\BarotraumaShared\SharedSource\ContentManagement\ContentFile\ResourceFile.cs">
+      <Link>SharedSource\ContentManagement\ContentFile\ResourceFile.cs</Link>
+    </Compile>
+    <Compile Update="..\BarotraumaShared\SharedSource\Map\Levels\GenerationProcedure30.cs">
+      <Link>SharedSource\Map\Levels\GenerationProcedure30.cs</Link>
+    </Compile>
+    <Compile Update="..\BarotraumaShared\SharedSource\ContentManagement\ContentFile\ResourceFile.cs">
+      <Link>SharedSource\ContentManagement\ContentFile\ResourceFile.cs</Link>
+    </Compile>
+    <Compile Update="..\BarotraumaShared\SharedSource\Map\Resource.cs">
+      <Link>SharedSource\Map\Resource.cs</Link>
+    </Compile>
+    <Compile Update="..\BarotraumaShared\SharedSource\Map\ResourcePrefab.cs">
+      <Link>SharedSource\Map\ResourcePrefab.cs</Link>
+    </Compile>
+    <Compile Update="..\BarotraumaShared\SharedSource\Map\Map\ResourceGenerator.cs">
+      <Link>SharedSource\Map\Map\ResourceGenerator.cs</Link>
+    </Compile>
   </ItemGroup>
   
   <ItemGroup>

@@ -167,9 +167,15 @@ namespace Barotrauma
 
             try
             {
-                return success(doc.Root.GetAttributeBool("corepackage", false)
-                    ? new CorePackage(doc, path)
-                    : new RegularPackage(doc, path));
+                switch (doc.Root.GetAttributeBool("btpackage", false))
+                {
+                    case true:
+                        return success(new Baro30Package(doc, path));
+                    case false:
+                        return success(doc.Root.GetAttributeBool("corepackage", false)
+                            ? new CorePackage(doc, path)
+                            : new RegularPackage(doc, path));
+                }
             }
             catch (Exception e)
             {

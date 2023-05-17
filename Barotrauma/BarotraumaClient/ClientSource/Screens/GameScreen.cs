@@ -5,6 +5,8 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Diagnostics;
 using System.Linq;
+using FarseerPhysics;
+using Voronoi2;
 
 namespace Barotrauma
 {
@@ -127,7 +129,7 @@ namespace Barotrauma
             sw.Restart();
 
             spriteBatch.Begin(SpriteSortMode.Deferred, null, GUI.SamplerState, null, GameMain.ScissorTestEnable);
-
+            
             if (Character.Controlled != null && cam != null) { Character.Controlled.DrawHUD(spriteBatch, cam); }
 
             if (GameMain.GameSession != null) { GameMain.GameSession.Draw(spriteBatch); }

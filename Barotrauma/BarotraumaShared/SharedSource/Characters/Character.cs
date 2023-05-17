@@ -12,6 +12,7 @@ using Barotrauma.Extensions;
 using System.Collections.Immutable;
 using Barotrauma.Abilities;
 using System.Diagnostics;
+using FarseerPhysics.Dynamics.Joints;
 #if SERVER
 using System.Text;
 #endif
@@ -3928,11 +3929,34 @@ namespace Barotrauma
             return ApplyAttack(attacker, worldPosition, attack, deltaTime, playSound, null);
         }
 
+        public Body GetBodyFromCharacter(Character character)
+        {
+            return character.AnimController.Limbs[0].body.FarseerBody;
+        }
+
+        public Body GetBodyFromLimb(Limb target)
+        {
+            return target.body.FarseerBody;
+        }
+        
+        public void GrabPlayer(Character attacker, Limb target, Vector2 world_position)
+        {
+            Body Body1 = GetBodyFromCharacter(attacker);
+            Body Body2 = GetBodyFromLimb(target);
+            WeldJoint joint = JointFactory.CreateWeldJoint(GameMain.World, Body1, Body2, Vector2.Zero, Vector2.Zero, false);
+            joint.Breakpoint = 100.0f;
+        }
+
         /// <summary>
         /// Apply the specified attack to this character. If the targetLimb is not specified, the limb closest to worldPosition will receive the damage.
         /// </summary>
         public AttackResult ApplyAttack(Character attacker, Vector2 worldPosition, Attack attack, float deltaTime, bool playSound = false, Limb targetLimb = null, float penetration = 0f)
         {
+#if CLIENT
+            if(attacker.SpeciesName == "Crawler")
+                GrabPlayer(attacker, targetLimb, worldPosition);
+#endif
+
             if (Removed)
             {
                 string errorMsg = "Tried to apply an attack to a removed character ([name]).\n" + Environment.StackTrace.CleanupStackTrace();

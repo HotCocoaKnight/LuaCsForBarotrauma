@@ -4,27 +4,45 @@ using Microsoft.Xna.Framework;
 
 namespace Barotrauma;
 
-public class ResourcePrefab
+class ResourcePrefab : MapEntityPrefab
 {
-    public class ResourceData
+    public ResourcePrefab(Identifier identifier) : base(identifier)
     {
-        public ResourceData()
-        {
-            
-        }
-        public string SpritePath;
-        public string Name;
-        public float durability;
     }
-    public static List<ResourcePrefab> Prefabs = new List<ResourcePrefab>();
-    public ResourceData rData;
-    
-    public ResourcePrefab(string SpritePath, string Name, float durability)
+
+    public ResourcePrefab(ContentXElement e, ContentFile file) : base(e, file)
     {
-        rData = new ResourceData();
-        rData.SpritePath = SpritePath;
-        rData.Name = Name;
-        rData.durability = durability;
-        Prefabs.Add(this);
+        string name = e.GetAttributeString("name", "un-named");
+        int dur = e.GetAttributeInt("dur", 10);
+        string path = e.GetAttributeString("sprite", "Content/Resources/Ice.png");
+        int width = e.GetAttributeInt("width", 0);
+        int height = e.GetAttributeInt("height", 0);
+#if CLIENT
+        this.Sprite = new Sprite(TextureLoader.FromFile(path), new Rectangle(width/2, height/2, width, height), Vector2.Zero);
+#endif
+        this.Name = name;
+        this.Category = MapEntityCategory.Material;
+        this.Scale = Rand.Range(1, 4);
+        if (Resource.Prefabs == null)
+            Resource.Prefabs = new List<ResourcePrefab>();
+        
+        Resource.Prefabs.Add(this);
+    }
+
+    public override void Dispose()
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public override Sprite Sprite { get; }
+    public override string OriginalName { get; }
+    public override LocalizedString Name { get; }
+    public override ImmutableHashSet<Identifier> Tags { get; }
+    public override ImmutableHashSet<Identifier> AllowedLinks { get; }
+    public override MapEntityCategory Category { get; }
+    public override ImmutableHashSet<string> Aliases { get; }
+    protected override void CreateInstance(Rectangle rect)
+    {
+        throw new System.NotImplementedException();
     }
 }

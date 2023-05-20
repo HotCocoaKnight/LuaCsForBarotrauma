@@ -201,7 +201,7 @@ namespace Barotrauma.Lights
             {
                 if (!light.Enabled) { continue; }
                 if ((light.Color.A < 1 || light.Range < 1.0f) && !light.LightSourceParams.OverrideLightSpriteAlpha.HasValue) { continue; }
-
+ 
                 if (light.ParentBody != null)
                 {
                     light.ParentBody.UpdateDrawPosition();

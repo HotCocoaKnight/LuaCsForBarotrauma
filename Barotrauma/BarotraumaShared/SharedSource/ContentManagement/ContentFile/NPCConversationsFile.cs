@@ -29,7 +29,8 @@ namespace Barotrauma
         {
             foreach (var collection in NPCConversationCollection.Collections.Values)
             {
-                collection.RemoveByFile(this);
+                if(collection != null)
+                    collection.RemoveByFile(this);
             }
         }
 
@@ -37,7 +38,8 @@ namespace Barotrauma
         {
             foreach (var collection in NPCConversationCollection.Collections.Values)
             {
-                collection.SortAll();
+                if(collection != null)
+                    collection.SortAll();
             }
         }
     }

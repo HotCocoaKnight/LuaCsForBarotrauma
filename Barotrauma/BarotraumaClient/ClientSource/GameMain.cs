@@ -18,6 +18,7 @@ using System.Reflection;
 using System.Threading;
 using Barotrauma.Extensions;
 using System.Collections.Immutable;
+using Microsoft.Xna.Framework.Content;
 
 namespace Barotrauma
 {
@@ -333,6 +334,137 @@ namespace Barotrauma
             ResolutionChanged?.Invoke();
         }
 
+        public void LoadMultiThreaded()
+        {
+
+            if (GameSettings.CurrentConfig.VerboseLogging)
+            {
+                DebugConsole.NewMessage("LOADING COROUTINE", Color.Lime);
+            }
+
+            ContentPackageManager.LoadVanillaFileList();
+
+            SoundManager = new Sounds.SoundManager();
+            SoundManager.ApplySettings();
+
+            ContentPackageManager.EnabledPackages.SetCore(ContentPackageManager.VanillaCorePackage);
+
+            if (GameSettings.CurrentConfig.EnableSplashScreen && !ConsoleArguments.Contains("-skipintro"))
+            {
+                var pendingSplashScreens = TitleScreen.PendingSplashScreens;
+                float baseVolume = MathHelper.Clamp(GameSettings.CurrentConfig.Audio.SoundVolume * 2.0f, 0.0f, 1.0f);
+                pendingSplashScreens?.Enqueue(new LoadingScreen.PendingSplashScreen("Content/SplashScreens/Splash_UTG.webm", baseVolume * 0.5f));
+                pendingSplashScreens?.Enqueue(new LoadingScreen.PendingSplashScreen("Content/SplashScreens/Splash_FF.webm", baseVolume));
+                pendingSplashScreens?.Enqueue(new LoadingScreen.PendingSplashScreen("Content/SplashScreens/Splash_Daedalic.webm", baseVolume * 0.1f));
+            }
+
+            GUI.Init();
+
+            var corePackage = ContentPackageManager.EnabledPackages.Core;
+            if (corePackage.EnableError.TryUnwrap(out var error))
+            {
+                if (error.ErrorsOrException.TryGet(out ImmutableArray<string> errorMessages))
+                {
+                    throw new Exception($"Error while loading the core content package \"{corePackage.Name}\": {errorMessages.First()}");
+                }
+                else if (error.ErrorsOrException.TryGet(out Exception exception))
+                {
+                    throw new Exception($"Error while loading the core content package \"{corePackage.Name}\": {exception.Message}", exception);
+                }
+            }
+
+            TextManager.VerifyLanguageAvailable();
+
+            DebugConsole.Init();
+
+            ContentPackageManager.LogEnabledRegularPackageErrors();
+
+#if !DEBUG && !OSX
+            GameAnalyticsManager.InitIfConsented();
+#endif
+
+            TaskPool.Add("InitRelayNetworkAccess", SteamManager.InitRelayNetworkAccess(), (t) => { });
+
+            HintManager.Init();
+            CoreEntityPrefab.InitCorePrefabs();
+            GameModePreset.Init();
+
+            SaveUtil.DeleteDownloadedSubs();
+            SubmarineInfo.RefreshSavedSubs();
+
+            TitleScreen.LoadState = 75.0f;
+            GameScreen = new GameScreen(GraphicsDeviceManager.GraphicsDevice);
+
+            ParticleManager = new ParticleManager(GameScreen.Cam);
+            LightManager = new Lights.LightManager(base.GraphicsDevice);
+            
+            TitleScreen.LoadState = 80.0f;
+
+            MainMenuScreen          = new MainMenuScreen(this);
+            ServerListScreen        = new ServerListScreen();
+
+            TitleScreen.LoadState = 85.0f;
+
+#if USE_STEAM
+            if (SteamManager.IsInitialized)
+            {
+                Steamworks.SteamFriends.OnGameRichPresenceJoinRequested += OnInvitedToGame;
+                Steamworks.SteamFriends.OnGameLobbyJoinRequested += OnLobbyJoinRequested;
+
+                if (SteamManager.TryGetUnlockedAchievements(out List<Steamworks.Data.Achievement> achievements))
+                {
+                    //check the achievements too, so we don't consider people who've played the game before this "gamelaunchcount" stat was added as being 1st-time-players
+                    //(people who have played previous versions, but not unlocked any achievements, will be incorrectly considered 1st-time-players, but that should be a small enough group to not skew the statistics)
+                    if (!achievements.Any() && SteamManager.GetStatInt("gamelaunchcount".ToIdentifier()) <= 0)
+                    {
+                        IsFirstLaunch = true;
+                        GameAnalyticsManager.AddDesignEvent("FirstLaunch");
+                    }
+                }
+                SteamManager.IncrementStat("gamelaunchcount".ToIdentifier(), 1);
+            }
+#endif
+
+            SubEditorScreen         = new SubEditorScreen();
+            TestScreen              = new TestScreen();
+
+            TitleScreen.LoadState = 90.0f;
+
+            ParticleEditorScreen    = new ParticleEditorScreen();
+
+            TitleScreen.LoadState = 95.0f;
+
+            LevelEditorScreen       = new LevelEditorScreen();
+            SpriteEditorScreen      = new SpriteEditorScreen();
+            EventEditorScreen       = new EventEditorScreen();
+            CharacterEditorScreen   = new CharacterEditor.CharacterEditorScreen();
+            CampaignEndScreen       = new CampaignEndScreen();
+
+#if DEBUG
+            LevelGenerationParams.CheckValidity();
+#endif
+
+            MainMenuScreen.Select();
+
+            foreach (Identifier steamError in SteamManager.InitializationErrors)
+            {
+                new GUIMessageBox(TextManager.Get("Error"), TextManager.Get(steamError));
+            }
+
+            GameSettings.OnGameMainHasLoaded?.Invoke();
+
+            TitleScreen.LoadState = 100.0f;
+            HasLoaded = true;
+            if (GameSettings.CurrentConfig.VerboseLogging)
+            {
+                DebugConsole.NewMessage("LOADING COROUTINE FINISHED", Color.Lime);
+            }
+
+#if CLIENT
+            LuaCsInstaller.CheckUpdate();
+#endif
+        }
+        
         public void SetWindowMode(WindowMode windowMode)
         {
             WindowMode = windowMode;
@@ -408,15 +540,22 @@ namespace Barotrauma
 
             Quad.Init(GraphicsDevice);
 
+            GameSettings.Config cfg =  GameSettings.CurrentConfig;
+            cfg.Language = new LanguageIdentifier("english".ToIdentifier());
+            GameSettings.SetCurrentConfig(cfg);
+            
             loadingScreenOpen = true;
             TitleScreen = new LoadingScreen(GraphicsDevice)
             {
                 WaitForLanguageSelection = GameSettings.CurrentConfig.Language == LanguageIdentifier.None
             };
 
-            bool canLoadInSeparateThread = true;
-
-            loadingCoroutine = CoroutineManager.StartCoroutine(Load(canLoadInSeparateThread), "Load", canLoadInSeparateThread);
+            Thread loadThread = new Thread(LoadMultiThreaded);
+            loadThread.Start();
+            while (!HasLoaded)
+            {
+                CrossThread.ProcessTasks();
+            }
         }
 
         public class LoadingException : Exception
@@ -424,179 +563,6 @@ namespace Barotrauma
             public LoadingException(Exception e) : base("Loading was interrupted due to an error.", innerException: e)
             {
             }
-        }
-
-        private IEnumerable<CoroutineStatus> Load(bool isSeparateThread)
-        {
-            if (GameSettings.CurrentConfig.VerboseLogging)
-            {
-                DebugConsole.NewMessage("LOADING COROUTINE", Color.Lime);
-            }
-
-            ContentPackageManager.LoadVanillaFileList();
-
-            if (TitleScreen.WaitForLanguageSelection)
-            {
-                ContentPackageManager.VanillaCorePackage.LoadFilesOfType<TextFile>();
-                TitleScreen.AvailableLanguages = TextManager.AvailableLanguages.OrderBy(l => l.Value != "english".ToIdentifier()).ThenBy(l => l.Value).ToArray();
-                while (TitleScreen.WaitForLanguageSelection)
-                {
-                    yield return CoroutineStatus.Running;
-                }
-                ContentPackageManager.VanillaCorePackage.UnloadFilesOfType<TextFile>();
-            }
-
-            SoundManager = new Sounds.SoundManager();
-            SoundManager.ApplySettings();
-
-            if (GameSettings.CurrentConfig.EnableSplashScreen && !ConsoleArguments.Contains("-skipintro"))
-            {
-                var pendingSplashScreens = TitleScreen.PendingSplashScreens;
-                float baseVolume = MathHelper.Clamp(GameSettings.CurrentConfig.Audio.SoundVolume * 2.0f, 0.0f, 1.0f);
-                pendingSplashScreens?.Enqueue(new LoadingScreen.PendingSplashScreen("Content/SplashScreens/Splash_UTG.webm", baseVolume * 0.5f));
-                pendingSplashScreens?.Enqueue(new LoadingScreen.PendingSplashScreen("Content/SplashScreens/Splash_FF.webm", baseVolume));
-                pendingSplashScreens?.Enqueue(new LoadingScreen.PendingSplashScreen("Content/SplashScreens/Splash_Daedalic.webm", baseVolume * 0.1f));
-            }
-
-            //if not loading in a separate thread, wait for the splash screens to finish before continuing the loading
-            //otherwise the videos will look extremely choppy
-            if (!isSeparateThread)
-            {
-                while (TitleScreen.PlayingSplashScreen || TitleScreen.PendingSplashScreens.Count > 0)
-                {
-                    yield return CoroutineStatus.Running;
-                }
-            }
-
-            GUI.Init();
-
-            yield return CoroutineStatus.Running;
-
-            LegacySteamUgcTransition.Prepare();
-            var contentPackageLoadRoutine = ContentPackageManager.Init();
-            foreach (var progress in contentPackageLoadRoutine
-                         .Select(p => p.Result).Successes())
-            {
-                const float min = 1f, max = 70f;
-                TitleScreen.LoadState = MathHelper.Lerp(min, max, progress);
-                yield return CoroutineStatus.Running;
-            }
-
-            var corePackage = ContentPackageManager.EnabledPackages.Core;
-            if (corePackage.EnableError.TryUnwrap(out var error))
-            {
-                if (error.ErrorsOrException.TryGet(out ImmutableArray<string> errorMessages))
-                {
-                    throw new Exception($"Error while loading the core content package \"{corePackage.Name}\": {errorMessages.First()}");
-                }
-                else if (error.ErrorsOrException.TryGet(out Exception exception))
-                {
-                    throw new Exception($"Error while loading the core content package \"{corePackage.Name}\": {exception.Message}", exception);
-                }
-            }
-
-            TextManager.VerifyLanguageAvailable();
-
-            DebugConsole.Init();
-
-            ContentPackageManager.LogEnabledRegularPackageErrors();
-
-#if !DEBUG && !OSX
-            GameAnalyticsManager.InitIfConsented();
-#endif
-
-            TaskPool.Add("InitRelayNetworkAccess", SteamManager.InitRelayNetworkAccess(), (t) => { });
-
-            HintManager.Init();
-        yield return CoroutineStatus.Running;
-            CoreEntityPrefab.InitCorePrefabs();
-            GameModePreset.Init();
-
-            SaveUtil.DeleteDownloadedSubs();
-            SubmarineInfo.RefreshSavedSubs();
-
-            TitleScreen.LoadState = 75.0f;
-        yield return CoroutineStatus.Running;
-
-            GameScreen = new GameScreen(GraphicsDeviceManager.GraphicsDevice);
-
-            ParticleManager = new ParticleManager(GameScreen.Cam);
-            LightManager = new Lights.LightManager(base.GraphicsDevice);
-            
-            TitleScreen.LoadState = 80.0f;
-        yield return CoroutineStatus.Running;
-
-            MainMenuScreen          = new MainMenuScreen(this);
-            ServerListScreen        = new ServerListScreen();
-
-            TitleScreen.LoadState = 85.0f;
-        yield return CoroutineStatus.Running;
-
-#if USE_STEAM
-            if (SteamManager.IsInitialized)
-            {
-                Steamworks.SteamFriends.OnGameRichPresenceJoinRequested += OnInvitedToGame;
-                Steamworks.SteamFriends.OnGameLobbyJoinRequested += OnLobbyJoinRequested;
-
-                if (SteamManager.TryGetUnlockedAchievements(out List<Steamworks.Data.Achievement> achievements))
-                {
-                    //check the achievements too, so we don't consider people who've played the game before this "gamelaunchcount" stat was added as being 1st-time-players
-                    //(people who have played previous versions, but not unlocked any achievements, will be incorrectly considered 1st-time-players, but that should be a small enough group to not skew the statistics)
-                    if (!achievements.Any() && SteamManager.GetStatInt("gamelaunchcount".ToIdentifier()) <= 0)
-                    {
-                        IsFirstLaunch = true;
-                        GameAnalyticsManager.AddDesignEvent("FirstLaunch");
-                    }
-                }
-                SteamManager.IncrementStat("gamelaunchcount".ToIdentifier(), 1);
-            }
-#endif
-
-            SubEditorScreen         = new SubEditorScreen();
-            TestScreen              = new TestScreen();
-
-            TitleScreen.LoadState = 90.0f;
-        yield return CoroutineStatus.Running;
-
-            ParticleEditorScreen    = new ParticleEditorScreen();
-
-            TitleScreen.LoadState = 95.0f;
-        yield return CoroutineStatus.Running;
-
-            LevelEditorScreen       = new LevelEditorScreen();
-            SpriteEditorScreen      = new SpriteEditorScreen();
-            EventEditorScreen       = new EventEditorScreen();
-            CharacterEditorScreen   = new CharacterEditor.CharacterEditorScreen();
-            CampaignEndScreen       = new CampaignEndScreen();
-
-        yield return CoroutineStatus.Running;
-
-#if DEBUG
-            LevelGenerationParams.CheckValidity();
-#endif
-
-            MainMenuScreen.Select();
-
-            foreach (Identifier steamError in SteamManager.InitializationErrors)
-            {
-                new GUIMessageBox(TextManager.Get("Error"), TextManager.Get(steamError));
-            }
-
-            GameSettings.OnGameMainHasLoaded?.Invoke();
-
-            TitleScreen.LoadState = 100.0f;
-            HasLoaded = true;
-            if (GameSettings.CurrentConfig.VerboseLogging)
-            {
-                DebugConsole.NewMessage("LOADING COROUTINE FINISHED", Color.Lime);
-            }
-
-#if CLIENT
-            LuaCsInstaller.CheckUpdate();
-#endif
-
-            yield return CoroutineStatus.Success;
-
         }
 
         /// <summary>
@@ -746,11 +712,6 @@ namespace Barotrauma
 #endif
 
                     Client?.Update((float)Timing.Step);
-
-                    if (!HasLoaded && !CoroutineManager.IsCoroutineRunning(loadingCoroutine))
-                    {
-                        throw new LoadingException(loadingCoroutine.Exception);
-                    }
                 }
                 else if (HasLoaded)
                 {

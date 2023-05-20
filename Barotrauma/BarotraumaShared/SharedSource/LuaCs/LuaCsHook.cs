@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using HarmonyLib;
 using Microsoft.Xna.Framework;
 using MoonSharp.Interpreter;
@@ -415,6 +416,88 @@ namespace Barotrauma
         public enum HookMethodType
         {
             Before, After
+        }
+
+        public class XMLHook
+        {
+            public static string NotHook = "don't hook";
+            public static List<XElement> elementHooks;
+            private class CrossRefrence
+            {
+                public XElement comparie;
+                public XElement found;
+                public void CrossRefData()
+                {
+                    foreach (var j in elementHooks)
+                    {
+                        if (comparie.GetAttributeString("identifier", "none")
+                            .Equals(j.GetAttributeString("identifier", "empty")))
+                        {
+                            found = j;
+                            break;
+                        }
+                    }
+                }
+            }
+            private static CrossRefrence CreateCross(XElement element)
+            {
+                CrossRefrence cross = new CrossRefrence();
+                foreach (XElement j in element.Elements())
+                {
+                    cross.comparie = j;
+                    cross.CrossRefData();
+                }
+
+                return cross;
+            }
+            private static void LoopAndReplace(XElement replace, XElement replacer)
+            {
+                foreach (var r in replacer.Attributes())
+                {
+                    if(r.Name != "xhook")
+                        replace.SetAttributeValue(r.Name, r.Value);
+                }
+
+                foreach (var child in replacer.Elements())
+                {
+                    LoopAndReplace(replace.GetChildElement(child.Name.ToString(), StringComparison.OrdinalIgnoreCase), child);
+                }
+            }
+            private static void PlacePatch(CrossRefrence found)
+            {
+                if (found.found != null)
+                {
+                    LoopAndReplace(found.found, found.comparie);
+                }
+            }
+            
+            public static ContentFile InterceptPackage(ContentFile file)
+            {
+                bool isxml = file.Path.Value.Contains(".xml");
+
+                if (!isxml)
+                    return file;
+
+                XDocument xDocument = XMLExtensions.TryLoadXml(file.Path.Value);
+                if (xDocument != null)
+                {
+                    foreach (XElement i in xDocument.Elements())
+                    {
+                        foreach (XElement el in i.Elements())
+                        {
+                            string idf = el.GetAttributeString("xhook", "none");
+                            if (idf != "none")
+                            {
+                                CrossRefrence found = CreateCross(el);
+                                PlacePatch(found);
+                            }
+                        }
+                    }
+                    DebugConsole.Log("xdocument found");
+                }
+
+                return file;
+            }
         }
 
         private class LuaCsHookCallback

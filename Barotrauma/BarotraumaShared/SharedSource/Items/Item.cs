@@ -886,6 +886,23 @@ namespace Barotrauma
 
         public Action<Character> OnDeselect;
 
+        public class BlueprintData
+        {
+            public string IDLink;
+
+            public BuildObjectPrefab GetPrefabByLink()
+            {
+                foreach (var b in BuildObjectPrefab.Prefabs)
+                {
+                    bool isrefrenced = b.ObjectName == IDLink;
+                    return b;
+                }
+                return null;
+            }
+        }
+
+        public BlueprintData blueprint;
+
         public Item(ItemPrefab itemPrefab, Vector2 position, Submarine submarine, ushort id = Entity.NullEntityID, bool callOnItemLoaded = true)
             : this(new Rectangle(
                 (int)(position.X - itemPrefab.Sprite.size.X / 2 * itemPrefab.Scale), 
@@ -894,7 +911,10 @@ namespace Barotrauma
                 (int)(itemPrefab.Sprite.size.Y * itemPrefab.Scale)), 
                 itemPrefab, submarine, callOnItemLoaded, id: id)
         {
-
+            if (itemPrefab.blueprint)
+            {
+                blueprint.IDLink = itemPrefab.blueprintIDLink;
+            }
         }
 
         /// <summary>
@@ -904,6 +924,11 @@ namespace Barotrauma
         public Item(Rectangle newRect, ItemPrefab itemPrefab, Submarine submarine, bool callOnItemLoaded = true, ushort id = Entity.NullEntityID)
             : base(itemPrefab, submarine, id)
         {
+            if (itemPrefab.blueprint)
+            {
+                blueprint.IDLink = itemPrefab.blueprintIDLink;
+            }
+            
             spriteColor = base.Prefab.SpriteColor;
 
             components          = new List<ItemComponent>();
@@ -2755,6 +2780,18 @@ namespace Barotrauma
 
         public void Use(float deltaTime, Character character = null, Limb targetLimb = null)
         {
+            if (blueprint.IDLink != string.Empty)
+            {
+                try
+                {
+                    new BuildObject(GameMain.GameScreen.Cam.ScreenToWorld(PlayerInput.MousePosition),
+                        blueprint.GetPrefabByLink());
+                }
+                catch (Exception c)
+                {
+                    DebugConsole.Log(c.ToString());
+                }
+            }
             if (RequireAimToUse && (character == null || !character.IsKeyDown(InputType.Aim)))
             {
                 return;

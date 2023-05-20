@@ -1367,6 +1367,8 @@ namespace Barotrauma
             GenerateItems();
 
             GenerateEqualityCheckValue(LevelGenStage.Finish);
+            
+            ResourceDeposit.GenerateAllDeposits(this);
 
 #if CLIENT
             backgroundCreatureManager.SpawnCreatures(this, GenerationParams.BackgroundCreatureAmount);
@@ -1382,13 +1384,6 @@ namespace Barotrauma
                     edge.Site2 = null;
                 }
             }
-            
-            #if CLIENT
-            
-            ResourceGeneration.Generate(this);
-            
-            #endif
-
             //initialize MapEntities that aren't in any sub (e.g. items inside ruins)
             MapEntity.MapLoaded(MapEntity.mapEntityList.FindAll(me => me.Submarine == null), false);
 

@@ -96,6 +96,21 @@ namespace Barotrauma
             Character.AddAllToGUIUpdateList();
             base.AddToGUIUpdateList();
         }
+
+        public virtual void DrawResources(GraphicsDevice g, SpriteBatch batch, double deltaTime)
+        {
+            batch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, DepthStencilState.None, null, null, cam.Transform);
+
+            if (Resource.LoadedResources.Any())
+            {
+                foreach (var v in Resource.LoadedResources)
+                {
+                    v.Draw(batch, false, 1);
+                }
+            }
+            
+            batch.End();
+        }
         
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
@@ -129,7 +144,7 @@ namespace Barotrauma
             sw.Restart();
 
             spriteBatch.Begin(SpriteSortMode.Deferred, null, GUI.SamplerState, null, GameMain.ScissorTestEnable);
-            
+
             if (Character.Controlled != null && cam != null) { Character.Controlled.DrawHUD(spriteBatch, cam); }
 
             if (GameMain.GameSession != null) { GameMain.GameSession.Draw(spriteBatch); }
@@ -206,9 +221,12 @@ namespace Barotrauma
             Submarine.DrawPaintedColors(spriteBatch, false);
             spriteBatch.End();
 
+            DrawResources(graphics, spriteBatch, deltaTime);
+            
             sw.Stop();
             GameMain.PerformanceCounter.AddElapsedTicks("Draw:Map:BackStructures", sw.ElapsedTicks);
             sw.Restart();
+            
 
             graphics.SetRenderTarget(null);
             GameMain.LightManager.RenderLightMap(graphics, spriteBatch, cam, renderTarget);
@@ -299,7 +317,7 @@ namespace Barotrauma
                     c.Draw(spriteBatch, Cam);
                 }
             }
-
+            
             sw.Stop();
             GameMain.PerformanceCounter.AddElapsedTicks("Draw:Map:DeformableCharacters", sw.ElapsedTicks);
             sw.Restart();

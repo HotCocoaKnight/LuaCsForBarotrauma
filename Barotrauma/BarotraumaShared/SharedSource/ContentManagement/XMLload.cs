@@ -16,16 +16,30 @@ public static class Baro30Loader
         {
             foreach (XElement e in element.Elements())
             {
-                if (e.Name.ToString().Equals("Resource"))
+                string path = e.GetAttributeString("file", "");
+                switch (e.Name.ToString())
                 {
-                    string path = e.GetAttributeString("file", "");
-                    if (path.Equals(""))
+                    case "Resource":
                     {
-                        DebugConsole.ThrowError("ERROR PATH NOT SPECIFIED", new Exception("Path not specified for barotrauma 3.0 package"), true);
-                        return;
-                    }
-                    XDocument doc = XDocument.Load(path);
-                    toLoad.Add(new Baro30Package(doc, path));
+                        if (path.Equals(""))
+                        {
+                            DebugConsole.ThrowError("ERROR PATH NOT SPECIFIED", new Exception("Path not specified for barotrauma 3.0 package"), true);
+                            break;
+                        }
+                        XDocument doc = XDocument.Load(path);
+                        toLoad.Add(new Baro30Package(doc, path));
+                    } break;
+                    case "BuildObject":
+                    {
+                        if (path.Equals(""))
+                        {
+                            DebugConsole.ThrowError("ERORR PATH NOT SPECIFED",
+                                new Exception("Path not specified for barotrauma 3.0 package"));
+                            break;
+                        }
+                        XDocument document = XDocument.Load(path);
+                        toLoad.Add(new Baro30Package(document, path));
+                    } break;
                 }
             }
         }

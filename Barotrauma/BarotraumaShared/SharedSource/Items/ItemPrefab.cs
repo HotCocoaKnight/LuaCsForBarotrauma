@@ -816,7 +816,10 @@ namespace Barotrauma
 
         [Serialize(float.PositiveInfinity, IsPropertySaveable.No, description: "The max distance at which the bots are allowed to target the items. Defaults to infinity.")]
         public float AITurretTargetingMaxDistance { get; private set; }
-
+        
+        public bool blueprint;
+        public string blueprintIDLink;
+        
         protected override Identifier DetermineIdentifier(XElement element)
         {
             Identifier identifier = base.DetermineIdentifier(element);
@@ -844,6 +847,14 @@ namespace Barotrauma
 
             OriginalName = element.GetAttributeString("name", "");
             name = OriginalName;
+
+            blueprint = element.GetAttributeBool("blueprint", false);
+            if (blueprint == true)
+            {
+                blueprintIDLink = element.GetAttributeString("bplink", "none");
+                if (blueprintIDLink.Equals("none"))
+                    blueprint = false;
+            }
 
             VariantOf = element.VariantOf();
             

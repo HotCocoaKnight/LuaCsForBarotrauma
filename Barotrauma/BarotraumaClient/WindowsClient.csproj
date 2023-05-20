@@ -121,6 +121,18 @@
     <Compile Update="..\BarotraumaShared\SharedSource\Map\Map\ResourceGenerator.cs">
       <Link>SharedSource\Map\Map\ResourceGenerator.cs</Link>
     </Compile>
+    <Compile Update="..\BarotraumaShared\SharedSource\Map\Resource.cs">
+      <Link>SharedSource\Map\Resource.cs</Link>
+    </Compile>
+    <Compile Update="..\BarotraumaShared\SharedSource\Map\Levels\ResourceDeposit.cs">
+      <Link>SharedSource\Map\Levels\ResourceDeposit.cs</Link>
+    </Compile>
+    <Compile Update="..\BarotraumaShared\SharedSource\Map\BuildObject.cs">
+      <Link>SharedSource\Map\BuildObject.cs</Link>
+    </Compile>
+    <Compile Update="..\BarotraumaShared\SharedSource\LuaCs\LuaXML.cs">
+      <Link>SharedSource\LuaCs\LuaXML.cs</Link>
+    </Compile>
   </ItemGroup>
   
   <ItemGroup>

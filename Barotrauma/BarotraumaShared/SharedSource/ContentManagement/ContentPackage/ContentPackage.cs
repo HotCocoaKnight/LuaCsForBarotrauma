@@ -7,6 +7,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
@@ -253,82 +254,70 @@ namespace Barotrauma
 
         public LoadResult LoadContent()
         {
-            foreach (var p in LoadContentEnumerable())
-            {
-                if (p.Result.IsFailure) { return LoadResult.Failure; }
-            }
-            return LoadResult.Success;
+            return LoadContentEnumerable() ? LoadResult.Success : LoadResult.Failure;
         }
-        
-        public IEnumerable<ContentPackageManager.LoadProgress> LoadContentEnumerable()
+
+        public class LoadThread
         {
-            using var errorCatcher = DebugConsole.ErrorCatcher.Create();
+            public static List<LoadThread> Threads = new List<LoadThread>();
+            public Thread lThread;
+            public ContentFile[] chunk;
 
-            ContentFile[] getFilesToLoad(Predicate<ContentFile> predicate)
-                => Files.Where(predicate.Invoke).ToArray()
-#if DEBUG
-                        //The game should be able to work just fine with a completely arbitrary file load order.
-                        //To make sure we don't mess this up, debug builds randomize it so it has a higher chance
-                        //of breaking anything that's not implemented correctly.
-                        .Randomize()
-#endif
-                    ;
-
-            IEnumerable<ContentPackageManager.LoadProgress> loadFiles(ContentFile[] filesToLoad, int indexOffset)
+            public void LoadChunk()
             {
-                for (int i = 0; i < filesToLoad.Length; i++)
+                foreach (var v in chunk)
                 {
-                    Exception? exception = null;
-
                     try
                     {
-                        //do not allow exceptions thrown here to crash the game
-                        filesToLoad[i].LoadFile();
+                        v.LoadFile();
                     }
                     catch (Exception e)
                     {
-                        var innermost = e.GetInnermost();
-                        DebugConsole.LogError($"Failed to load \"{filesToLoad[i].Path}\": {innermost.Message}\n{innermost.StackTrace}");
-                        exception = e;
+                        DebugConsole.Log(e.ToString());
                     }
-                    if (exception != null)
-                    {
-                        yield return ContentPackageManager.LoadProgress.Failure(exception);
-                        yield break;
-                    }
-
-                    if (errorCatcher.Errors.Any())
-                    {
-                        yield return ContentPackageManager.LoadProgress.Failure(errorCatcher.Errors.Select(e => e.Text));
-                        yield break;
-                    }
-                    yield return ContentPackageManager.LoadProgress.Progress((i + indexOffset) / (float)Files.Length);
                 }
             }
+            
+            public LoadThread(ContentFile[] threadChunk)
+            {
+                Threads.Add(this);
+                lThread = new Thread(LoadChunk);
+                chunk = threadChunk;
+                lThread.Start();
+            }
+        }
 
-            //Load the UI and text files first. This is to allow the game
-            //to render the text in the loading screen as soon as possible.
+        public void LoadFiles(ContentFile[] files)
+        {
+            foreach (ContentFile file in files)
+            {
+                try
+                {
+                    file.LoadFile();
+                }
+                catch (Exception e)
+                {
+                    DebugConsole.Log(e.ToString());
+                }
+            }
+        }
+
+        public bool LoadContentEnumerable()
+        {
+            ContentFile[] getFilesToLoad(Predicate<ContentFile> predicate)
+                => Files.Where(predicate.Invoke).ToArray();
+                
             var priorityFiles = getFilesToLoad(f => f is UIStyleFile or TextFile);
 
             var remainder = getFilesToLoad(f => !priorityFiles.Contains(f));
 
-            var loadEnumerable =
-                loadFiles(priorityFiles, 0)
-                    .Concat(loadFiles(remainder, priorityFiles.Length));
-            
-            foreach (var p in loadEnumerable)
-            {
-                if (p.Result.TryUnwrapFailure(out var failure))
-                {
-                    errorCatcher.Dispose();
-                    UnloadContent();
-                    EnableError = Option.Some(failure);
-                    yield return p;
-                    yield break;
-                }
-                yield return p;
-            }
-            errorCatcher.Dispose();
+            LoadThread priorityThread = new LoadThread(priorityFiles);
+            LoadThread remThread = new LoadThread(remainder);
+
+            priorityThread.lThread.Join();
+            remThread.lThread.Join();
+
+            return true;
         }
 
         public void UnloadContent()

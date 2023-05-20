@@ -52,7 +52,7 @@ namespace Barotrauma
                 if (newCore.FatalLoadErrors.Any()) { yield break; }
                 Core?.UnloadContent();
                 Core = newCore;
-                foreach (var p in newCore.LoadContentEnumerable()) { yield return p; }
+                newCore.LoadContentEnumerable();
                 SortContent();
                 yield return LoadProgress.Progress(1.0f);
             }
@@ -97,16 +97,16 @@ namespace Barotrauma
                 {
                     var package = toLoad[i];
                     loadingRange = new Range<float>(i / (float)toLoad.Length, (i + 1) / (float)toLoad.Length);
-                    foreach (var progress in package.LoadContentEnumerable())
-                    {
-                        if (progress.Result.IsFailure)
-                        {
-                            //If an exception was thrown while loading this package, refuse to add it to the list of enabled packages
-                            newRegular.Remove(package);
-                            break;
-                        }
-                        yield return progress.Transform(loadingRange);
-                    }
+                    newRegular.Remove(package);
+                    
+                    loadingRange = new Range<float>(i / (float)toLoad.Length, (i + 1) / (float)toLoad.Length);
+
+                    if(package.LoadContentEnumerable())
+                        newRegular.Remove(package);
+
+                    LoadProgress lp = new LoadProgress(Result<float, LoadProgress.Error>.Success(1.0f));
+
+                    yield return lp.Transform(loadingRange);
                 }
                 regular.Clear(); regular.AddRange(newRegular);
                 SortContent();

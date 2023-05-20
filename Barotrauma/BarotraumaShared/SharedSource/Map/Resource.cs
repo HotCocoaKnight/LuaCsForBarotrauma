@@ -1,55 +1,93 @@
-﻿using System.Collections.Generic;
-using Microsoft.Xna.Framework;
-#if CLIENT
-using System;
+﻿using System;
+using System.Collections.Generic;
+using System.Xml.Linq;
 using Barotrauma.Items.Components;
-using Barotrauma.Lights;
+using Barotrauma.Networking;
+using FarseerPhysics.Common;
+using Microsoft.Xna.Framework;
+
+#if CLIENT
+using FarseerPhysics;
 using Microsoft.Xna.Framework.Graphics;
 #endif
 
 namespace Barotrauma;
 
-class Resource : MapEntity
+partial class ResourcePrefab
 {
-    public static List<ResourcePrefab> Prefabs;
-    public static List<Resource> Resources;
-    public int randScale = 1;
-    public Resource(MapEntityPrefab prefab, Sprite sprite, ushort id, Vector2 pos) : base(prefab, null, id)
-    {
-        this.Position = pos;
-        this.Sprite = sprite;
-        randScale = Rand.Range(1, 4);
-    }
-
-    public Vector2 ScreenPos;
-    public Camera cam;
-
-    public override Vector2 Position { get; }
-    public override Sprite Sprite { get; }
-
-    public Vector2 GetScreenPos()
-    {
-        return cam.WorldToScreen(Position);
-    }
-
-    public void SetCamera(Camera cam)
-    {
-        this.cam = cam;
-    }
-    
-    
     #if CLIENT
-    public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
-    {
-        GameMain.LightManager.
-        ScreenPos = GetScreenPos();
-        Sprite.Draw(spriteBatch, ScreenPos, Color.White, 0.0f, randScale);
-        base.Draw(spriteBatch, editing, back);
-    }
+    public Sprite ObjectSprite;
     #endif
-
-    public override MapEntity Clone()
+    public float width;
+    public float height;
+    public static List<ResourcePrefab> Prefabs;
+    public ResourcePrefab(XElement resourceElement)
     {
-        throw new System.NotImplementedException();
+        width = (float)resourceElement.GetAttributeInt("width", 300);
+        height = (float)resourceElement.GetAttributeInt("height", 300);
+#if CLIENT
+        Texture2D t = TextureLoader.FromFile(resourceElement.GetAttributeString("sprite", "no-path"));
+        ObjectSprite = new Sprite(t, new Rectangle(0, 0, (int)width, (int)height), new Vector2(-(width/2), -(height/2)));
+#endif
+    }
+}
+
+
+partial class Resource : Entity, IDrawableComponent, IServerPositionSync
+{
+    private Vector2 spritePosition;
+    public Vector2 Scale;
+    public Sprite Sprite;
+    public override Vector2 Position { get; }
+    public static List<Resource> LoadedResources;
+
+    public float angle;
+    
+    public void SetPosition(Vector2 pos)
+    {
+        spritePosition = pos;
+    }
+    
+    public Resource(ResourcePrefab prefab, Vector2 position, float angle) : base(null, (ushort)Resource.FindFreeIdBlock(1))
+    {
+        this.Position = position;
+        this.angle = angle;
+        this.Scale = new Vector2(prefab.width, prefab.height);
+#if CLIENT
+      this.Sprite = prefab.ObjectSprite;
+        spritePosition = position;
+#endif
+        if (LoadedResources == null)
+        {
+            LoadedResources = new List<Resource>();
+        }
+        LoadedResources.Add(this);
+    }
+    
+#if CLIENT
+    public Vector2 DrawSize { get; }
+    
+    public void Draw(SpriteBatch spriteBatch, bool editing, float itemDepth = -1)
+    {
+        Sprite.Draw(spriteBatch, spritePosition, Color.White, angle);
+    }
+#endif
+    
+    public void ClientEventRead(IReadMessage msg, float sendingTime)
+    {
+        
+    }
+
+    public void ClientReadPosition(IReadMessage msg, float sendingTime)
+    {
+        spritePosition = new Vector2(msg.ReadSingle(), msg.ReadSingle());
+    }
+    public void ServerWritePosition(ReadWriteMessage a, Client b)
+    {
+        a.WriteSingle(spritePosition.X);
+        a.WriteSingle(spritePosition.Y);
+    }
+    public void ServerEventWrite(IWriteMessage a, Client b, NetEntityEvent.IData idata)
+    {
     }
 }

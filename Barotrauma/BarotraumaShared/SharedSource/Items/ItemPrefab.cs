@@ -818,8 +818,7 @@ namespace Barotrauma
         public float AITurretTargetingMaxDistance { get; private set; }
         
         public bool blueprint;
-        public string blueprintIDLink;
-        
+
         protected override Identifier DetermineIdentifier(XElement element)
         {
             Identifier identifier = base.DetermineIdentifier(element);
@@ -851,9 +850,7 @@ namespace Barotrauma
             blueprint = element.GetAttributeBool("blueprint", false);
             if (blueprint == true)
             {
-                blueprintIDLink = element.GetAttributeString("bplink", "none");
-                if (blueprintIDLink.Equals("none"))
-                    blueprint = false;
+                LuaCsLogger.Log("Loaded Build Object");
             }
 
             VariantOf = element.VariantOf();

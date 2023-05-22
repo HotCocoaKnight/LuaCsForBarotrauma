@@ -43,13 +43,5 @@ public static class Baro30Loader
                 }
             }
         }
-
-        if (toLoad.Any())
-        {
-            foreach (Baro30Package xd in toLoad)
-            {
-                xd.LoadContent();
-            }
-        }
     }
 }

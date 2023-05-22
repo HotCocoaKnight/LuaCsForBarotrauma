@@ -133,6 +133,9 @@
     <Compile Update="..\BarotraumaShared\SharedSource\LuaCs\LuaXML.cs">
       <Link>SharedSource\LuaCs\LuaXML.cs</Link>
     </Compile>
+    <Compile Update="..\BarotraumaShared\SharedSource\Items\Components\Holdable\Blueprint.cs">
+      <Link>SharedSource\Items\Components\Holdable\Blueprint.cs</Link>
+    </Compile>
   </ItemGroup>
   
   <ItemGroup>

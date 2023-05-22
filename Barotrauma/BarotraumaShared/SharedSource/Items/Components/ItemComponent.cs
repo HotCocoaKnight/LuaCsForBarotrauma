@@ -910,6 +910,21 @@ namespace Barotrauma.Items.Components
 
         public static ItemComponent Load(ContentXElement element, Item item, bool errorMessages = true)
         {
+            if (element.Name.ToString() == "Blueprint")
+            {
+                ItemComponent itemComponent = null;
+                try
+                {
+                    itemComponent = Blueprint.AttemptLoad(element, item);
+                }
+                catch (Exception c)
+                {
+                    DebugConsole.Log(c.ToString());
+                }
+
+                return itemComponent;
+            }
+            
             Type type;
             Identifier typeName = element.NameAsIdentifier();
             try

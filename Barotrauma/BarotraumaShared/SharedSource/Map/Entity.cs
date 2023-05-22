@@ -26,6 +26,16 @@ namespace Barotrauma
             return dictionary.Values;
         }
 
+        public void DeclareUsedID(ushort ID)
+        {
+            foreach (var v in dictionary)
+            {
+                if (v.Key == ID)
+                    throw new Exception("ID ALREADY USED CANT DECLARED USED");
+            }
+            
+        }
+
         public static int EntityCount => dictionary.Count;
 
         public static EntitySpawner Spawner;
@@ -147,6 +157,19 @@ namespace Barotrauma
             }
         }
 
+        protected virtual ushort CrossIDS(ushort id) // this cross references all the ids in the game and if one is found it give's a new unique id
+        {
+            foreach (var v in dictionary)
+            {
+                if (v.Key == id)
+                {
+                    return (ushort)FindFreeIdBlock(1);
+                }
+            }
+
+            return id;
+        }
+        
         protected virtual ushort DetermineID(ushort id, Submarine submarine)
         {
             return id != NullEntityID
@@ -213,7 +236,10 @@ namespace Barotrauma
             {
                 try
                 {
-                    e.Remove();
+                    if (e.Removed == false)
+                    {
+                        e.Remove();
+                    }
                 }
                 catch (Exception exception)
                 {

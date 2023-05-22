@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Diagnostics;
 using System.Linq;
+using Barotrauma.Items.Components;
 using FarseerPhysics;
 using Voronoi2;
 
@@ -111,6 +112,34 @@ namespace Barotrauma
             
             batch.End();
         }
+
+        public virtual void DrawBuildObjects(SpriteBatch spriteBatch)
+        {
+            /*
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, DepthStencilState.None, null, null, cam.Transform);
+            if (BuildObject.SpawnedBuildings.Any())
+            {
+                foreach (var v in BuildObject.SpawnedBuildings)
+                {
+                    v.Draw(spriteBatch, false, true);
+                }
+            }
+            spriteBatch.End();
+            */
+        }
+
+        public virtual void DrawSchematic(SpriteBatch sp)
+        {
+            sp.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, DepthStencilState.None, null, null, cam.Transform);
+            if (Blueprint.SpawnedBlueprints.Any())
+            {
+                foreach (var bp in Blueprint.SpawnedBlueprints)
+                {
+                    bp.DrawPlacement(sp, cam);
+                }
+            }
+            sp.End();
+        }
         
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
@@ -138,6 +167,8 @@ namespace Barotrauma
             sw.Start();
 
             DrawMap(graphics, spriteBatch, deltaTime);
+
+            DrawSchematic(spriteBatch);
 
             sw.Stop();
             GameMain.PerformanceCounter.AddElapsedTicks("Draw:Map", sw.ElapsedTicks);
@@ -177,7 +208,7 @@ namespace Barotrauma
             GUI.Draw(cam, spriteBatch);
 
             spriteBatch.End();
-
+            
             sw.Stop();
             GameMain.PerformanceCounter.AddElapsedTicks("Draw:HUD", sw.ElapsedTicks);
             sw.Restart();
@@ -222,6 +253,7 @@ namespace Barotrauma
             spriteBatch.End();
 
             DrawResources(graphics, spriteBatch, deltaTime);
+            DrawBuildObjects(spriteBatch);
             
             sw.Stop();
             GameMain.PerformanceCounter.AddElapsedTicks("Draw:Map:BackStructures", sw.ElapsedTicks);

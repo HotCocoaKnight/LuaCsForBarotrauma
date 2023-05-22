@@ -33,7 +33,7 @@ public class ResourceFile
 
     public void ParseBuildingObject(XElement element)
     {
-        new BuildObjectPrefab(element);
+        
     }
 
     public void ParseBuildingObjects(XElement elements)
@@ -52,9 +52,6 @@ public class ResourceFile
             {
                 case "Resources":
                     ParseResources(element);
-                    break;
-                case "BuildObjects":
-                    ParseBuildingObjects(element);
                     break;
             }
         }

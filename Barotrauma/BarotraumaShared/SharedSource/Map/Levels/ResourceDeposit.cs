@@ -26,6 +26,8 @@ static class ResourceDeposit
             foreach (var vert in cell.BodyVertices)
             {
                 CellVertToVector(vert, cell.Translation, out Vector2 p);
+                vert.Normalize();
+                
                 AddDeposit(p, 0f, ResourcePrefab.Prefabs[Rand.Range(0,ResourcePrefab.Prefabs.Count-1)]);
             }
         }

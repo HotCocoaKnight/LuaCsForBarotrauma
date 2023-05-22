@@ -54,7 +54,7 @@ partial class Resource : Entity, IDrawableComponent, IServerPositionSync
         this.angle = angle;
         this.Scale = new Vector2(prefab.width, prefab.height);
 #if CLIENT
-      this.Sprite = prefab.ObjectSprite;
+        this.Sprite = prefab.ObjectSprite;
         spritePosition = position;
 #endif
         if (LoadedResources == null)

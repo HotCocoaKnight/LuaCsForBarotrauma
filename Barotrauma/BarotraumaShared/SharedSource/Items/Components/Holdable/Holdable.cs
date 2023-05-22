@@ -400,7 +400,8 @@ namespace Barotrauma.Items.Components
 
         public override void Equip(Character character)
         {
-            //if the item has multiple Pickable components (e.g. Holdable and Wearable, check that we don't equip it in hands when the item is worn or vice versa)
+            DebugConsole.Log("ERROR NOT FOUND");
+            
             if (item.GetComponents<Pickable>().Count() > 0)
             {
                 bool inSuitableSlot = false;

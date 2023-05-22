@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using FarseerPhysics;
+using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -29,15 +31,20 @@ partial class Blueprint
     {
         if (!ShowPlacement || Bp.bpPrefab == null)
             return;
+
+        Vector2 drawpoint = new Vector2(Owner.CursorWorldPosition.X, -Owner.CursorWorldPosition.Y);
+
+        LuaCsLogger.Log("previous draw" + drawpoint.ToString());
         
-        BuildObject closestBuilding = GetClosestBuild(Owner.CursorWorldPosition, out float distance);
-        Vector2 drawPos = new Vector2(Owner.CursorWorldPosition.X, -Owner.CursorWorldPosition.Y);
-        if (distance < 150.0f)
+        BuildObject ClosestObject = GetClosestBuild(Owner.CursorPosition, out float dist);
+        if (dist < 128.0f)
         {
-            drawPos = closestBuilding.GridArea.GetPoint(Owner.CursorWorldPosition).position;
-            closestBuilding.GridArea.Draw(spriteBatch, this.item.Scale);
+            GridComponent.GridBlock block = ClosestObject.GridArea.GetPoint(Owner.CursorWorldPosition);
+            Vector2 gridPos = ClosestObject.DrawPosition;
+            drawpoint = new Vector2(gridPos.X, -gridPos.Y);
         }
-        Bp.bpPrefab.Sprite.Draw(spriteBatch, drawPos, new Color(150, 150, 255, 100), 0f, this.item.Scale, SpriteEffects.None, 0.0f);
+
+        Bp.bpPrefab.Sprite.Draw(spriteBatch, drawpoint, new Color(150, 150, 255, 100), 0f, this.item.Scale, SpriteEffects.None, 0.0f);
         Update(0, camera);
     }
 }

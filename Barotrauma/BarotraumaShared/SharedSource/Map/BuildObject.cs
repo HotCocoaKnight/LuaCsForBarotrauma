@@ -55,7 +55,6 @@ public class GridComponent
 
     public GridBlock GetPoint(Vector2 target)
     {
-        Vector2 t = target;
         GridBlock returnBlock = null;
         float lastdist = float.PositiveInfinity;
         foreach (var p in points)
@@ -94,6 +93,8 @@ public class GridComponent
             points.Add(new GridBlock(-i * 64, 0));
 
         }
+
+        points[0].filled = true;
             this.Position = worldPosition;
 #if CLIENT
         Sprite = new Sprite(TextureLoader.FromFile(grid_path), new Rectangle(0, 0, 64, 64), Vector2.Zero, 0f,
@@ -114,7 +115,8 @@ partial class BuildObject : Item
     {
         FreeID();
         GridArea = new GridComponent(position, "Content/BuildObjects/snap_grid.png");
-        GridArea.Position = position;
+        GridArea.Position = body.Position;
+        SpawnedBuildings.Add(this);
     }
 
     public BuildObject(Rectangle newRect, ItemPrefab itemPrefab, Submarine submarine, bool callOnItemLoaded = true, ushort id = Entity.NullEntityID) : base(newRect, itemPrefab, submarine, callOnItemLoaded, id)

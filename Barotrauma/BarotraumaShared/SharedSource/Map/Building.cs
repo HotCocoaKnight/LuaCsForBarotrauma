@@ -4,6 +4,7 @@ using System.Xml.Linq;
 using Barotrauma.Networking;
 using FarseerPhysics;
 using FarseerPhysics.Dynamics;
+using HarmonyLib;
 using Microsoft.Xna.Framework;
 #if CLIENT
 using Microsoft.Xna.Framework.Graphics;
@@ -50,6 +51,36 @@ partial class BlockPrefab
                     break;
             }
         }
+    }
+}
+
+partial class BlockGrid
+{
+    protected class GridBlock
+    {
+        public Vector2 Position;
+        public BlockGrid Parent;
+
+        public GridBlock(Vector2 position)
+        {
+            Position = position;
+        }
+    }
+
+    protected GridBlock rootBlock;
+    
+    protected List<GridBlock> blockGrids;
+
+    protected BlockGrid(GridBlock block)
+    {
+        rootBlock = block;
+        rootBlock.Parent = this;
+        blockGrids.Add(rootBlock);
+    }
+
+    public static BlockGrid CreateGrid(Vector2 position)
+    {
+        return new BlockGrid(new GridBlock(position));
     }
 }
 

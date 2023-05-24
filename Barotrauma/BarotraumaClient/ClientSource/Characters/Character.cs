@@ -811,6 +811,14 @@ namespace Barotrauma
             AnimController.Draw(spriteBatch, cam);
         }
 
+        public void DrawSchematics(SpriteBatch spriteBatch, Camera cam)
+        {
+            foreach (Constructor c in Constructor.WorldDraws)
+            {
+                c.DrawHUD(spriteBatch, Character.controlled);
+            }
+        }
+
         public void DrawHUD(SpriteBatch spriteBatch, Camera cam, bool drawHealth = true)
         {
             CharacterHUD.Draw(spriteBatch, this, cam);

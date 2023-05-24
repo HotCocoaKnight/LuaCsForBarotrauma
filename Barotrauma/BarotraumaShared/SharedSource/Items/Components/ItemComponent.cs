@@ -910,23 +910,14 @@ namespace Barotrauma.Items.Components
 
         public static ItemComponent Load(ContentXElement element, Item item, bool errorMessages = true)
         {
-            if (element.Name.ToString() == "Blueprint")
-            {
-                ItemComponent itemComponent = null;
-                try
-                {
-                    itemComponent = Blueprint.AttemptLoad(element, item);
-                }
-                catch (Exception c)
-                {
-                    DebugConsole.Log(c.ToString());
-                }
-
-                return itemComponent;
-            }
-            
             Type type;
             Identifier typeName = element.NameAsIdentifier();
+
+            if (element.Name.ToString().ToLower().Equals("constructor"))
+            {
+                return new Constructor(item, element);
+            }
+            
             try
             {
                 // Get the type of a specified class.

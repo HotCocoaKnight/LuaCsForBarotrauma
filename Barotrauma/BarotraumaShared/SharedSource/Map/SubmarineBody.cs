@@ -52,7 +52,7 @@ namespace Barotrauma
 
         private readonly Submarine submarine;
 
-        public readonly PhysicsBody Body;
+        public PhysicsBody Body;
 
         private readonly List<PosInfo> positionBuffer = new List<PosInfo>();
 

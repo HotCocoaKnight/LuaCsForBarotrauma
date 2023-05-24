@@ -847,12 +847,6 @@ namespace Barotrauma
             OriginalName = element.GetAttributeString("name", "");
             name = OriginalName;
 
-            blueprint = element.GetAttributeBool("blueprint", false);
-            if (blueprint == true)
-            {
-                LuaCsLogger.Log("Loaded Build Object");
-            }
-
             VariantOf = element.VariantOf();
             
             if (!VariantOf.IsEmpty) { return; } //don't even attempt to read the XML until the PrefabCollection readies up the parent to inherit from

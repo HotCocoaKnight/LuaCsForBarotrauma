@@ -6,6 +6,28 @@ using System.Xml.Linq;
 
 namespace Barotrauma;
 
+public class BlockFile
+{
+    private string path;
+    public BlockFile(string path)
+    {
+        this.path = path;
+        XDocument document = XMLExtensions.TryLoadXml(path);
+        foreach (var e in document.Elements())
+        {
+            switch (e.Name.ToString())
+            {
+                case "Blocks":
+                    foreach (var block in e.Elements())
+                    {
+                        BlockPrefab.Prefabs.Add(new BlockPrefab(block));
+                    }
+                    break;
+            }
+        }
+    }
+}
+
 public static class Baro30Loader
 {
     public static void LoadBT30()
@@ -19,27 +41,9 @@ public static class Baro30Loader
                 string path = e.GetAttributeString("file", "");
                 switch (e.Name.ToString())
                 {
-                    case "Resource":
-                    {
-                        if (path.Equals(""))
-                        {
-                            DebugConsole.ThrowError("ERROR PATH NOT SPECIFIED", new Exception("Path not specified for barotrauma 3.0 package"), true);
-                            break;
-                        }
-                        XDocument doc = XDocument.Load(path);
-                        toLoad.Add(new Baro30Package(doc, path));
-                    } break;
-                    case "BuildObject":
-                    {
-                        if (path.Equals(""))
-                        {
-                            DebugConsole.ThrowError("ERORR PATH NOT SPECIFED",
-                                new Exception("Path not specified for barotrauma 3.0 package"));
-                            break;
-                        }
-                        XDocument document = XDocument.Load(path);
-                        toLoad.Add(new Baro30Package(document, path));
-                    } break;
+                    case "Block":
+                        new BlockFile(path);
+                        break;
                 }
             }
         }

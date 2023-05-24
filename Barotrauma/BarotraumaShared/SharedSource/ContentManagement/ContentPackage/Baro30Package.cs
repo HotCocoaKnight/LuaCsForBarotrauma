@@ -9,28 +9,6 @@ public class ResourceFile
     private XDocument document;
     private string path;
 
-    void ParseResource(XElement resource)
-    {
-        if (ResourcePrefab.Prefabs == null)
-        {
-            ResourcePrefab.Prefabs = new List<ResourcePrefab>();
-        }
-        ResourcePrefab.Prefabs.Add(new ResourcePrefab(resource));
-    }
-    
-    void ParseResources(XElement parent)
-    {
-        foreach (var e in parent.Elements())
-        {
-            switch (e.Name.ToString())
-            {
-                case "Resource":
-                    ParseResource(e);
-                    break;
-            }
-        }
-    }
-
     public void ParseBuildingObject(XElement element)
     {
         
@@ -48,12 +26,7 @@ public class ResourceFile
     {
         foreach (var element in document.Elements())
         {
-            switch (element.Name.ToString())
-            {
-                case "Resources":
-                    ParseResources(element);
-                    break;
-            }
+            
         }
     }
     

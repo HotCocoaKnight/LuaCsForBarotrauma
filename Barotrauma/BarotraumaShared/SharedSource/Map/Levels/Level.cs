@@ -1367,8 +1367,6 @@ namespace Barotrauma
             GenerateItems();
 
             GenerateEqualityCheckValue(LevelGenStage.Finish);
-            
-            ResourceDeposit.GenerateAllDeposits(this);
 
 #if CLIENT
             backgroundCreatureManager.SpawnCreatures(this, GenerationParams.BackgroundCreatureAmount);

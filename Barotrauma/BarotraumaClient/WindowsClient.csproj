@@ -139,6 +139,12 @@
     <Compile Update="..\BarotraumaShared\SharedSource\Map\Building.cs">
       <Link>SharedSource\Map\Building.cs</Link>
     </Compile>
+    <Compile Update="..\BarotraumaShared\SharedSource\Items\Constructor.cs">
+      <Link>SharedSource\Items\Constructor.cs</Link>
+    </Compile>
+    <Compile Update="..\BarotraumaShared\SharedSource\Items\Components\Holdable\Constructor.cs">
+      <Link>SharedSource\Items\Components\Holdable\Constructor.cs</Link>
+    </Compile>
   </ItemGroup>
   
   <ItemGroup>

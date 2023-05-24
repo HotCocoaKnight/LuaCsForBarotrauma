@@ -101,46 +101,11 @@ namespace Barotrauma
         public virtual void DrawResources(GraphicsDevice g, SpriteBatch batch, double deltaTime)
         {
             batch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, DepthStencilState.None, null, null, cam.Transform);
-
-            if (Resource.LoadedResources.Any())
-            {
-                foreach (var v in Resource.LoadedResources)
-                {
-                    v.Draw(batch, false, 1);
-                }
-            }
+            
+            
             
             batch.End();
         }
-
-        public virtual void DrawBuildObjects(SpriteBatch spriteBatch)
-        {
-            /*
-            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, DepthStencilState.None, null, null, cam.Transform);
-            if (BuildObject.SpawnedBuildings.Any())
-            {
-                foreach (var v in BuildObject.SpawnedBuildings)
-                {
-                    v.Draw(spriteBatch, false, true);
-                }
-            }
-            spriteBatch.End();
-            */
-        }
-
-        public virtual void DrawSchematic(SpriteBatch sp)
-        {
-            sp.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, DepthStencilState.None, null, null, cam.Transform);
-            if (Blueprint.SpawnedBlueprints.Any())
-            {
-                foreach (var bp in Blueprint.SpawnedBlueprints)
-                {
-                    bp.DrawPlacement(sp, cam);
-                }
-            }
-            sp.End();
-        }
-        
         public override void Draw(double deltaTime, GraphicsDevice graphics, SpriteBatch spriteBatch)
         {
             cam.UpdateTransform(true);
@@ -167,8 +132,6 @@ namespace Barotrauma
             sw.Start();
 
             DrawMap(graphics, spriteBatch, deltaTime);
-
-            DrawSchematic(spriteBatch);
 
             sw.Stop();
             GameMain.PerformanceCounter.AddElapsedTicks("Draw:Map", sw.ElapsedTicks);
@@ -253,12 +216,10 @@ namespace Barotrauma
             spriteBatch.End();
 
             DrawResources(graphics, spriteBatch, deltaTime);
-            DrawBuildObjects(spriteBatch);
-            
+
             sw.Stop();
             GameMain.PerformanceCounter.AddElapsedTicks("Draw:Map:BackStructures", sw.ElapsedTicks);
             sw.Restart();
-            
 
             graphics.SetRenderTarget(null);
             GameMain.LightManager.RenderLightMap(graphics, spriteBatch, cam, renderTarget);
@@ -289,7 +250,7 @@ namespace Barotrauma
 #else
             spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, null, DepthStencilState.None, null, null, cam.Transform);
 #endif
-			GameMain.ParticleManager.Draw(spriteBatch, true, false, Particles.ParticleBlendState.AlphaBlend);
+            GameMain.ParticleManager.Draw(spriteBatch, true, false, Particles.ParticleBlendState.AlphaBlend);
 			spriteBatch.End();
             
             //draw additive particles that are in water and behind subs
@@ -574,6 +535,13 @@ namespace Barotrauma
             sw.Stop();
             GameMain.PerformanceCounter.AddElapsedTicks("Draw:Map:PostProcess", sw.ElapsedTicks);
             sw.Restart();
+            
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.LinearClamp, DepthStencilState.None,null, null, cam.Transform);
+            foreach (var v in Constructor.WorldDraws)
+            {
+                v.Draw(spriteBatch, cam);
+            }
+            spriteBatch.End();
         }
 
         partial void UpdateProjSpecific(double deltaTime)

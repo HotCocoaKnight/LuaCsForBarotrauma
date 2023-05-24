@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
+using Barotrauma.Networking;
+using FarseerPhysics;
+using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 #if CLIENT
 using Microsoft.Xna.Framework.Graphics;
@@ -8,30 +11,39 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Barotrauma;
 
-partial class Block
+partial class BlockPrefab
 {
     public string Name,
         Description;
 
-    private int durability = 0;
+    public int durability = 0;
     public Sprite Sprite;
 
     public float Scale;
-    
-    public Block(XElement element)
+
+    public static List<BlockPrefab> Prefabs = new List<BlockPrefab>();
+    public static List<ItemPrefab> ItemPrefabs = new List<ItemPrefab>();
+
+    public XElement element;
+
+    public BlockPrefab(XElement element)
     {
-        Name = element.GetAttributeString("Name", "no-name");
+        this.element = element;
+        Name = element.GetAttributeString("name", "no-name");
         Description = element.GetAttributeString("description", "");
         durability = element.GetAttributeInt("durability", 10); // max should be 100
+        Scale = element.GetAttributeFloat("scale", 0.1f);
         foreach (var e in element.Elements())
         {
             switch (e.Name.ToString().ToLower())
             {
                 case "sprite":
-                    string path = element.GetAttributeString("path", "");
+                    string path = e.GetAttributeString("path", "");
+                    #if CLIENT
                     Texture2D texture = TextureLoader.FromFile(path);
                     Sprite = new Sprite(texture, new Rectangle(0, 0, texture.Width, texture.Height),
-                        new Vector2(texture.Width / 2, texture.Height / 2), 0f, path);
+                        new Vector2(texture.Width, texture.Height) / 2, 0f, path);
+                    #endif
                     break;
                 default:
                     LuaCsLogger.Log("unimplemented component in xml: " + e.Name + ", type does not exist");
@@ -41,14 +53,15 @@ partial class Block
     }
 }
 
-partial class Building : Submarine
+partial class Block : Item
 {
-    public static Building CreateBuilding(Block startBlock)
+    public float durability = 30;
+    public Block(ItemPrefab itemPrefab, Vector2 WorldPosition) : base(itemPrefab, WorldPosition, null, Entity.NullEntityID, true)
     {
-        return null;
+        
     }
-    
-    private Building(SubmarineInfo info, bool showErrorMessages = true, Func<Submarine, List<MapEntity>> loadEntities = null, IdRemap linkedRemap = null) : base(info, showErrorMessages, loadEntities, linkedRemap)
+
+    public Block(Rectangle newRect, ItemPrefab itemPrefab, Submarine submarine, bool callOnItemLoaded = true, ushort id = Entity.NullEntityID) : base(newRect, itemPrefab, submarine, callOnItemLoaded, id)
     {
     }
 }

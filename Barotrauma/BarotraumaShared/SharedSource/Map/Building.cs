@@ -61,6 +61,15 @@ partial class BlockGrid
         public Vector2 Position;
         public BlockGrid Parent;
 
+        protected Block filled;
+
+        public static GridBlock Empty = new GridBlock(new Vector2(float.PositiveInfinity, float.PositiveInfinity));
+
+        public Block getBlock()
+        {
+            return filled;
+        }
+        
         public GridBlock(Vector2 position)
         {
             Position = position;
@@ -69,13 +78,31 @@ partial class BlockGrid
 
     protected GridBlock rootBlock;
     
-    protected List<GridBlock> blockGrids;
+    protected List<GridBlock> blocks;
+
+    public Vector2 GetValidPoint(Vector2 Point, out BlockGrid parent, bool setFilled = true)
+    {
+        GridBlock Block = GridBlock.Empty;
+        float lastDist = float.PositiveInfinity;
+        foreach (GridBlock block in blocks)
+        {
+            Vector2.Distance(ref Point, ref block.Position, out float dist);
+            if (dist < lastDist)
+            {
+                dist = lastDist;
+                Block.Position = block.Position;
+            }
+        }
+
+        parent = Block.Parent;
+        return Block.Position;
+    }
 
     protected BlockGrid(GridBlock block)
     {
         rootBlock = block;
         rootBlock.Parent = this;
-        blockGrids.Add(rootBlock);
+        blocks.Add(rootBlock);
     }
 
     public static BlockGrid CreateGrid(Vector2 position)
@@ -86,10 +113,16 @@ partial class BlockGrid
 
 partial class Block : Item
 {
-    public float durability = 30;
+    protected BlockGrid blockGrid;
+
+    public BlockGrid GetGrid()
+    {
+        return blockGrid;
+    }
+    
     public Block(ItemPrefab itemPrefab, Vector2 WorldPosition) : base(itemPrefab, WorldPosition, null, Entity.NullEntityID, true)
     {
-        
+        blockGrid = BlockGrid.CreateGrid(WorldPosition);
     }
 
     public Block(Rectangle newRect, ItemPrefab itemPrefab, Submarine submarine, bool callOnItemLoaded = true, ushort id = Entity.NullEntityID) : base(newRect, itemPrefab, submarine, callOnItemLoaded, id)

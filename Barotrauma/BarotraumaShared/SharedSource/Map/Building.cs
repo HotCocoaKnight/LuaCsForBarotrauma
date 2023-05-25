@@ -98,11 +98,29 @@ partial class BlockGrid
         return Block.Position;
     }
 
+    protected void CreateGridBlock(Vector2 pos)
+    {
+        blocks.Add(new GridBlock(pos));
+    }
+    
     protected BlockGrid(GridBlock block)
     {
         rootBlock = block;
         rootBlock.Parent = this;
+        blocks = new List<GridBlock>();
         blocks.Add(rootBlock);
+        for (int x = 0; x < 2; x++)
+        {
+            for (int y = 0; y < 2; y++)
+            {
+                CreateGridBlock(new Vector2(-x,y));
+                CreateGridBlock(new Vector2(x,-y));
+                CreateGridBlock(new Vector2(-x,-y));
+                CreateGridBlock(new Vector2(x,y));
+            }
+            CreateGridBlock(new Vector2(x,0));
+            CreateGridBlock(new Vector2(-x,0));
+        }
     }
 
     public static BlockGrid CreateGrid(Vector2 position)

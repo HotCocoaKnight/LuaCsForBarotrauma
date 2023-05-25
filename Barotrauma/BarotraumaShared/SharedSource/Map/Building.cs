@@ -82,7 +82,7 @@ partial class BlockGrid
 
     public float Scale;
     
-    public Vector2 GetValidPoint(Vector2 Point, out BlockGrid parent, bool setFilled = true)
+    public Vector2 GetValidPoint(Vector2 Point, out BlockGrid parent, out float distance)
     {
         GridBlock Block = GridBlock.Empty;
         float lastDist = float.PositiveInfinity;
@@ -95,14 +95,14 @@ partial class BlockGrid
                 Block.Position = block.Position;
             }
         }
-
+        distance = lastDist;
         parent = Block.Parent;
         return Block.Position;
     }
 
     protected void CreateGridBlock(Vector2 pos)
     {
-        blocks.Add(new GridBlock(pos));
+        blocks.Add(new GridBlock(pos + rootBlock.Position));
     }
     
     protected BlockGrid(GridBlock block, float scale)

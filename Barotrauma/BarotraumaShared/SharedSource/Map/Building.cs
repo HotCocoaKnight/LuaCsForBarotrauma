@@ -80,6 +80,8 @@ partial class BlockGrid
     
     protected List<GridBlock> blocks;
 
+    public float Scale;
+    
     public Vector2 GetValidPoint(Vector2 Point, out BlockGrid parent, bool setFilled = true)
     {
         GridBlock Block = GridBlock.Empty;
@@ -103,8 +105,9 @@ partial class BlockGrid
         blocks.Add(new GridBlock(pos));
     }
     
-    protected BlockGrid(GridBlock block)
+    protected BlockGrid(GridBlock block, float scale)
     {
+        Scale = scale;
         rootBlock = block;
         rootBlock.Parent = this;
         blocks = new List<GridBlock>();
@@ -122,10 +125,10 @@ partial class BlockGrid
             CreateGridBlock(new Vector2(-x,0));
         }
     }
-
-    public static BlockGrid CreateGrid(Vector2 position)
+    
+    public static BlockGrid CreateGrid(Vector2 position, float scale)
     {
-        return new BlockGrid(new GridBlock(position));
+        return new BlockGrid(new GridBlock(position), scale);
     }
 }
 
@@ -140,7 +143,7 @@ partial class Block : Item
     
     public Block(ItemPrefab itemPrefab, Vector2 WorldPosition) : base(itemPrefab, WorldPosition, null, Entity.NullEntityID, true)
     {
-        blockGrid = BlockGrid.CreateGrid(WorldPosition);
+        blockGrid = BlockGrid.CreateGrid(WorldPosition, itemPrefab.Scale);
     }
 
     public Block(Rectangle newRect, ItemPrefab itemPrefab, Submarine submarine, bool callOnItemLoaded = true, ushort id = Entity.NullEntityID) : base(newRect, itemPrefab, submarine, callOnItemLoaded, id)

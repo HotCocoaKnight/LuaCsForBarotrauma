@@ -28,15 +28,6 @@ partial class Block : Item
     
     public override void Draw(SpriteBatch spriteBatch, bool editing, bool back = true)
     {
-        if (GetLocalPlayer(out Character mainPlayer))
-        {
-            Vector2 point = blockGrid.GetValidPoint(mainPlayer.CursorWorldPosition, out BlockGrid parent, out float dist);
-            if (!float.IsPositiveInfinity(dist) && dist <= 160f)
-            {
-                LuaCsLogger.Log("draw");
-                blockGrid.Draw(spriteBatch);
-            }
-        }
         base.Draw(spriteBatch, editing, back);
     }
 }

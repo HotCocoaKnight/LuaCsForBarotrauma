@@ -105,7 +105,7 @@ partial class BlockGrid
         blocks.Add(new GridBlock(pos + rootBlock.Position));
     }
     
-    protected BlockGrid(GridBlock block, float scale)
+    protected BlockGrid(GridBlock block, Vector2 imageScaling,float scale)
     {
         Scale = scale;
         rootBlock = block;
@@ -116,25 +116,27 @@ partial class BlockGrid
         {
             for (int y = 0; y < 2; y++)
             {
-                CreateGridBlock(new Vector2(-x,y));
-                CreateGridBlock(new Vector2(x,-y));
-                CreateGridBlock(new Vector2(-x,-y));
-                CreateGridBlock(new Vector2(x,y));
+                CreateGridBlock(new Vector2(-x,y) * imageScaling);
+                CreateGridBlock(new Vector2(x,-y) * imageScaling);
+                CreateGridBlock(new Vector2(-x,-y) * imageScaling);
+                CreateGridBlock(new Vector2(x,y) * imageScaling);
             }
-            CreateGridBlock(new Vector2(x,0));
-            CreateGridBlock(new Vector2(-x,0));
+            CreateGridBlock(new Vector2(x,0) * imageScaling);
+            CreateGridBlock(new Vector2(-x,0) * imageScaling);
         }
     }
     
-    public static BlockGrid CreateGrid(Vector2 position, float scale)
+    public static BlockGrid CreateGrid(Vector2 position, Vector2 imgExtents, float scale)
     {
-        return new BlockGrid(new GridBlock(position), scale);
+        return new BlockGrid(new GridBlock(position), imgExtents, scale);
     }
 }
 
 partial class Block : Item
 {
     protected BlockGrid blockGrid;
+
+    public static List<Block> RegisteredBlocks = new List<Block>();
 
     public BlockGrid GetGrid()
     {
@@ -143,7 +145,8 @@ partial class Block : Item
     
     public Block(ItemPrefab itemPrefab, Vector2 WorldPosition) : base(itemPrefab, WorldPosition, null, Entity.NullEntityID, true)
     {
-        blockGrid = BlockGrid.CreateGrid(WorldPosition, itemPrefab.Scale);
+        blockGrid = BlockGrid.CreateGrid(WorldPosition, itemPrefab.Sprite.size, itemPrefab.Scale);
+        RegisteredBlocks.Add(this);
     }
 
     public Block(Rectangle newRect, ItemPrefab itemPrefab, Submarine submarine, bool callOnItemLoaded = true, ushort id = Entity.NullEntityID) : base(newRect, itemPrefab, submarine, callOnItemLoaded, id)

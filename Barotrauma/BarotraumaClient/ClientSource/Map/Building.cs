@@ -12,9 +12,9 @@ partial class BlockGrid
             return;
         foreach (var block in blocks)
         {
-            GridSprite.Draw(batch, new Vector2(block.Position.X, -block.Position.Y), 0f, Scale, SpriteEffects.None);
+            GridSprite.Draw(batch, new Vector2(StoredBlock.WorldPosition.X + block.Position.X, -(block.Position.Y + StoredBlock.WorldPosition.Y)), 0f, Scale, SpriteEffects.None);
         }
-        GridSprite.Draw(batch, new Vector2(rootBlock.Position.X, -rootBlock.Position.Y), 0f, Scale, SpriteEffects.None);
+        GridSprite.Draw(batch, new Vector2((rootBlock.Position.X + StoredBlock.WorldPosition.X), -(rootBlock.Position.Y + StoredBlock.WorldPosition.Y)), 0f, Scale, SpriteEffects.None);
     }
 }
 

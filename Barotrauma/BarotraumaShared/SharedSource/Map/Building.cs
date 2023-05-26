@@ -91,7 +91,7 @@ partial class BlockGrid
             Vector2.Distance(ref Point, ref block.Position, out float dist);
             if (dist < lastDist)
             {
-                dist = lastDist;
+                lastDist = dist;
                 Block.Position = block.Position;
             }
         }
@@ -102,14 +102,18 @@ partial class BlockGrid
 
     protected void CreateGridBlock(Vector2 pos)
     {
-        blocks.Add(new GridBlock(pos + rootBlock.Position));
+        blocks.Add(new GridBlock(pos));
     }
     
-    protected BlockGrid(GridBlock block, Vector2 imageScaling,float scale)
+    public Block StoredBlock;
+    
+    protected BlockGrid(Block parent,GridBlock block, Vector2 imageScaling,float scale)
     {
+        
         Scale = scale;
         rootBlock = block;
         rootBlock.Parent = this;
+        StoredBlock = parent;
         blocks = new List<GridBlock>();
         blocks.Add(rootBlock);
         for (int x = 0; x < 2; x++)
@@ -126,9 +130,9 @@ partial class BlockGrid
         }
     }
     
-    public static BlockGrid CreateGrid(Vector2 position, Vector2 imgExtents, float scale)
+    public static BlockGrid CreateGrid(Block parent,Vector2 position, Vector2 imgExtents, float scale)
     {
-        return new BlockGrid(new GridBlock(position), imgExtents, scale);
+        return new BlockGrid(parent, new GridBlock(position), imgExtents, scale);
     }
 }
 
@@ -145,7 +149,7 @@ partial class Block : Item
     
     public Block(ItemPrefab itemPrefab, Vector2 WorldPosition) : base(itemPrefab, WorldPosition, null, Entity.NullEntityID, true)
     {
-        blockGrid = BlockGrid.CreateGrid(WorldPosition, itemPrefab.Sprite.size, itemPrefab.Scale);
+        blockGrid = BlockGrid.CreateGrid(this, WorldPosition, itemPrefab.Sprite.size, itemPrefab.Scale);
         RegisteredBlocks.Add(this);
     }
 

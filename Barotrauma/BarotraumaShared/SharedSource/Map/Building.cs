@@ -82,6 +82,9 @@ partial class BlockGrid
 
     public float Scale;
     
+    public Block StoredBlock;
+    public Sprite GridSprite;
+    
     public Vector2 GetValidPoint(Vector2 Point, out BlockGrid parent, out float distance)
     {
         GridBlock Block = GridBlock.Empty;
@@ -104,12 +107,14 @@ partial class BlockGrid
     {
         blocks.Add(new GridBlock(pos));
     }
-    
-    public Block StoredBlock;
-    
+
     protected BlockGrid(Block parent,GridBlock block, Vector2 imageScaling,float scale)
     {
-        
+        #if CLIENT
+        Texture2D GridTexture = TextureLoader.FromFile("Content/Blocks/snap_grid.png");
+        GridSprite = new Sprite(GridTexture, new Rectangle(0, 0, GridTexture.Width, GridTexture.Height),
+            new Vector2(GridTexture.Width / 2f, GridTexture.Height / 2f), 0f);
+        #endif
         Scale = scale;
         rootBlock = block;
         rootBlock.Parent = this;
@@ -149,6 +154,7 @@ partial class Block : Item
     
     public Block(ItemPrefab itemPrefab, Vector2 WorldPosition) : base(itemPrefab, WorldPosition, null, Entity.NullEntityID, true)
     {
+        FreeID();
         blockGrid = BlockGrid.CreateGrid(this, WorldPosition, itemPrefab.Sprite.size, itemPrefab.Scale);
         RegisteredBlocks.Add(this);
     }

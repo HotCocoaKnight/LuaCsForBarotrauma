@@ -5,7 +5,6 @@ namespace Barotrauma;
 
 partial class BlockGrid
 {
-    public Sprite GridSprite;
     public virtual void Draw(SpriteBatch batch)
     {
         if (GridSprite == null)

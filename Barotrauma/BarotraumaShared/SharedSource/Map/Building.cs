@@ -106,6 +106,9 @@ partial class BlockGrid
     protected void CreateGridBlock(Vector2 pos)
     {
         blocks.Add(new GridBlock(pos));
+        blocks.Add(new GridBlock(new Vector2(pos.X, -pos.Y)));
+        blocks.Add(new GridBlock(new Vector2(-pos.X, pos.Y)));
+        blocks.Add(new GridBlock(new Vector2(-pos.X, -pos.Y)));
     }
 
     protected BlockGrid(Block parent,GridBlock block, Vector2 imageScaling,float scale)
@@ -125,13 +128,10 @@ partial class BlockGrid
         {
             for (int y = 0; y < 2; y++)
             {
-                CreateGridBlock(new Vector2(-x,y) * imageScaling);
-                CreateGridBlock(new Vector2(x,-y) * imageScaling);
-                CreateGridBlock(new Vector2(-x,-y) * imageScaling);
-                CreateGridBlock(new Vector2(x,y) * imageScaling);
+                CreateGridBlock(new Vector2(x, y));
             }
-            CreateGridBlock(new Vector2(x,0) * imageScaling);
-            CreateGridBlock(new Vector2(-x,0) * imageScaling);
+            blocks.Add(new GridBlock(new Vector2(x,0) * imageScaling * scale));
+            blocks.Add(new GridBlock(new Vector2(-x,0) * imageScaling * scale));
         }
     }
     
